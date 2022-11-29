@@ -6,7 +6,11 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
+import java.util.Arrays;
 import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -38,7 +42,27 @@ public final class LambdaFilter extends JFrame {
         /**
          * Commands.
          */
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()),
+
+        NUMBEROFCHARS("Number of chars", s -> Integer.toString(s.length())),
+
+        NUMBEROFLINES("Number of lines", s -> Long.toString(s.lines().count())),
+
+        LISTWORDSATOZ("List word in order",
+            s -> Arrays.stream(s.split(" "))
+                        .sorted()
+                        .collect(Collectors.joining(" "))
+                    ),
+        
+        REPEATEDWORDCOUNT("Count of repeated word", 
+            s -> Arrays.stream(s.split(" "))
+                        .collect(Collectors.groupingBy(String :: toString, Collectors.counting()))
+                        .toString()
+                        ),
+
+        TOLOWERCASE("To lowercase", s -> s.toLowerCase());
+
+        
 
         private final String commandName;
         private final Function<String, String> fun;
@@ -61,9 +85,11 @@ public final class LambdaFilter extends JFrame {
     private LambdaFilter() {
         super("Lambda filter GUI");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         final JPanel panel1 = new JPanel();
         final LayoutManager layout = new BorderLayout();
         panel1.setLayout(layout);
+
         final JComboBox<Command> combo = new JComboBox<>(Command.values());
         panel1.add(combo, BorderLayout.NORTH);
         final JPanel centralPanel = new JPanel(new GridLayout(1, 2));
@@ -75,10 +101,12 @@ public final class LambdaFilter extends JFrame {
         centralPanel.add(left);
         centralPanel.add(right);
         panel1.add(centralPanel, BorderLayout.CENTER);
+
         final JButton apply = new JButton("Apply");
         apply.addActionListener(ev -> right.setText(((Command) combo.getSelectedItem()).translate(left.getText())));
         panel1.add(apply, BorderLayout.SOUTH);
         setContentPane(panel1);
+
         final Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         final int sw = (int) screen.getWidth();
         final int sh = (int) screen.getHeight();
